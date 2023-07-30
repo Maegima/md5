@@ -1,6 +1,7 @@
 #include "md5.hpp"
+#include <sys/stat.h>
 
-void printres(int* result){
+void printres(unsigned int* result){
     unsigned char *p;
 
     // display result
@@ -15,9 +16,9 @@ void printres(int* result){
 int main(int argc, char **argv) {
     Hash *hash = new Hash();
     fstream file = fstream(argv[1]);
-    std::stringstream stream;
-    stream << file.rdbuf(); 
-    int *result = hash->md5sum(&stream);
+    struct stat f_stat;
+    stat(argv[1], &f_stat);
+    unsigned int *result = hash->md5(&file, f_stat.st_size);
     printres(result);
     return 0;
 }
