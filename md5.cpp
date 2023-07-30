@@ -2,12 +2,36 @@
 
 Hash::Hash() {}
 
-int* Hash::md5sum(std::stringstream* stream){
+unsigned int* Hash::md5(std::stringstream* stream){
     return md5(stream->str().c_str());
 }
 
-int* Hash::md5(const char *msg){
-    int *result = (int*) malloc(sizeof(int)*4);
+unsigned int* Hash::md5(fstream *msg, int size){
+    unsigned int *result = (unsigned int*) malloc(sizeof(unsigned int)*4);
+    result[0] = 0x67452301;   //A
+    result[1] = 0xefcdab89;   //B
+    result[2] = 0x98badcfe;   //C
+    result[3] = 0x10325476;   //D
+    int msglen = size;
+    u_int64_t bitslen = 8*msglen;
+
+    int offset;
+    char *buff = (char *) malloc(sizeof(char)*64);
+    for(offset = 0; offset < msglen - 64; offset += 64 ){
+        msg->read(buff, 64);
+        md5step((unsigned int *) buff, result);
+    }
+    bffzero(buff, 56);
+    msg->read(buff, msglen - offset);
+    buff[msglen - offset] = 0b10000000;
+    bffcpy(buff + 56, &bitslen, 8);
+    md5step((unsigned int *) buff, result);
+    free(buff);
+    return result;
+}
+
+unsigned int* Hash::md5(const char *msg){
+    unsigned int *result = (unsigned int*) malloc(sizeof(unsigned int)*4);
     result[0] = 0x67452301;   //A
     result[1] = 0xefcdab89;   //B
     result[2] = 0x98badcfe;   //C
@@ -17,7 +41,7 @@ int* Hash::md5(const char *msg){
 
     int offset; 
     for(offset = 0; offset < msglen - 64; offset += 64 ){
-        md5step((int *) (msg + offset), result);
+        md5step((unsigned int *) (msg + offset), result);
     }
     
     char *lastmsg = (char*) malloc(sizeof(char)*64);
@@ -25,17 +49,16 @@ int* Hash::md5(const char *msg){
     bffcpy(lastmsg, (void *) (msg + offset), msglen - offset);
     lastmsg[msglen - offset] = 0b10000000;
     bffcpy(lastmsg + 56, &bitslen, 8);
-    md5step((int *) lastmsg, result);
-    
+    md5step((unsigned int *) lastmsg, result);
     return result;
 }
 
-void Hash::md5step(int *wd, int *result){
-    int F, G;
-    int A = result[0];
-    int B = result[1];
-    int C = result[2];
-    int D = result[3];
+void Hash::md5step(unsigned int *wd, unsigned int *result){
+    unsigned int F, G;
+    unsigned int A = result[0];
+    unsigned int B = result[1];
+    unsigned int C = result[2];
+    unsigned int D = result[3];
     for(int i = 0; i<64; i++) {
         if( i < 16 ){
             F = (B & C) | ((~B) & D);

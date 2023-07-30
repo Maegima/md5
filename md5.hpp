@@ -79,7 +79,7 @@ private:
      * @param wd 64 bytes to apply md5 step.
      * @param result Step result.
      */
-    void md5step(int *wd, int *result);
+    void md5step(unsigned int *wd, unsigned int *result);
 public:
     /**
      * @brief Construct a new Hash object
@@ -87,9 +87,11 @@ public:
      */
     Hash();
 
-    int* md5sum(std::stringstream* stream);
+    unsigned int* md5(std::stringstream* stream);
 
-    int* md5(const char *msg);
+    unsigned int* md5(const char *msg);
+
+    unsigned int* md5(std::fstream *msg, int size);
 };
 
 #endif
