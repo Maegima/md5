@@ -17,13 +17,17 @@ unsigned int* Hash::md5(fstream *msg, int size){
 
     int offset;
     char *buff = (char *) malloc(sizeof(char)*64);
-    for(offset = 0; offset < msglen - 64; offset += 64 ){
+    for(offset = 0; offset < msglen - 63; offset += 64 ){
         msg->read(buff, 64);
         md5step((unsigned int *) buff, result);
     }
-    bffzero(buff, 56);
+    bffzero(buff, 64);
     msg->read(buff, msglen - offset);
     buff[msglen - offset] = 0b10000000;
+    if(msglen - offset > 55){
+        md5step((unsigned int *) buff, result);
+        bffzero(buff, 56);
+    }
     bffcpy(buff + 56, &bitslen, 8);
     md5step((unsigned int *) buff, result);
     free(buff);
@@ -40,14 +44,18 @@ unsigned int* Hash::md5(const char *msg){
     u_int64_t bitslen = 8*msglen;
 
     int offset; 
-    for(offset = 0; offset < msglen - 64; offset += 64 ){
+    for(offset = 0; offset < msglen - 63; offset += 64 ){
         md5step((unsigned int *) (msg + offset), result);
     }
     
     char *lastmsg = (char*) malloc(sizeof(char)*64);
-    bffzero(lastmsg, 56);
+    bffzero(lastmsg, 64);
     bffcpy(lastmsg, (void *) (msg + offset), msglen - offset);
     lastmsg[msglen - offset] = 0b10000000;
+    if(msglen - offset > 55){
+        md5step((unsigned int *) lastmsg, result);
+        bffzero(lastmsg, 56);
+    }
     bffcpy(lastmsg + 56, &bitslen, 8);
     md5step((unsigned int *) lastmsg, result);
     return result;
@@ -98,7 +106,7 @@ size_t Hash::strsize(const char *str){
 void Hash::bffcpy(void *dst, void *src, size_t n){
     char *s = (char*)src;
     char *d = (char*)dst;
-    for(int i = 0; i < n; i++) d[i] = s[i];
+    for(size_t i = 0; i < n; i++) d[i] = s[i];
 }
 
 void Hash::bffzero(char *bff, size_t n){
