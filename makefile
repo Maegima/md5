@@ -1,7 +1,7 @@
 OBJDIR=obj
 BINDIR=bin
 CC = g++
-CFLAGS = -Wall -g
+CFLAGS = -Wall -g -O3
   
 $(BINDIR)/md5sum: $(OBJDIR)/md5sum.o $(OBJDIR)/md5.o $(BINDIR)
 	$(CC) $(CFLAGS) -o $(BINDIR)/md5sum $(OBJDIR)/md5sum.o $(OBJDIR)/md5.o

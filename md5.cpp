@@ -15,11 +15,13 @@ unsigned int* Hash::md5(fstream *msg, u_int64_t size){
     u_int64_t msglen = size;
     u_int64_t bitslen = 8*msglen;
 
-    u_int64_t offset;
+    u_int64_t offset = 0;
     char *buff = (char *) malloc(sizeof(char)*64);
-    for(offset = 0; offset < msglen - 63; offset += 64 ){
-        msg->read(buff, 64);
-        md5step((unsigned int *) buff, result);
+    if(msglen > 63){
+        for(offset = 0; offset < msglen - 63; offset += 64 ){
+            msg->read(buff, 64);
+            md5step((unsigned int *) buff, result);
+        }
     }
     bffzero(buff, 64);
     msg->read(buff, msglen - offset);
