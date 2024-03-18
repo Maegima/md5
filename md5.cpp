@@ -6,16 +6,16 @@ unsigned int* Hash::md5(std::stringstream* stream){
     return md5(stream->str().c_str());
 }
 
-unsigned int* Hash::md5(fstream *msg, int size){
+unsigned int* Hash::md5(fstream *msg, u_int64_t size){
     unsigned int *result = (unsigned int*) malloc(sizeof(unsigned int)*4);
     result[0] = 0x67452301;   //A
     result[1] = 0xefcdab89;   //B
     result[2] = 0x98badcfe;   //C
     result[3] = 0x10325476;   //D
-    int msglen = size;
+    u_int64_t msglen = size;
     u_int64_t bitslen = 8*msglen;
 
-    int offset;
+    u_int64_t offset;
     char *buff = (char *) malloc(sizeof(char)*64);
     for(offset = 0; offset < msglen - 63; offset += 64 ){
         msg->read(buff, 64);

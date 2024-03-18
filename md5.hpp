@@ -2,10 +2,10 @@
  * @file md5.hpp
  * @author André Lucas Maegima
  * @brief Hash class using md5 algorithm.
- * @version 1.0
- * @date 2023-07-29
+ * @version 1.1
+ * @date 2024-03-18
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2024
  * 
  */
 
@@ -91,7 +91,7 @@ public:
 
     unsigned int* md5(const char *msg);
 
-    unsigned int* md5(std::fstream *msg, int size);
+    unsigned int* md5(std::fstream *msg, u_int64_t size);
 };
 
 #endif
