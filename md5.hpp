@@ -17,6 +17,27 @@
 
 using namespace std;
 
+struct Digest {
+    unsigned int A, B, C, D;
+    Digest(unsigned int A, unsigned int B, unsigned int C, unsigned D) : A(A), B(B), C(C), D(D) {};
+    Digest operator+=(const Digest &rhs) {
+        this->A += rhs.A;
+        this->B += rhs.B;
+        this->C += rhs.C;
+        this->D += rhs.D;
+        return *this;
+    }
+     operator std::string() const { 
+        char str[33];
+        unsigned char *p = (unsigned char*) this;
+        sprintf(str, "%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x", 
+            p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7],
+            p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15]
+        );
+        return str;
+    }
+};
+
 class Hash {
 private:
     /**
@@ -77,9 +98,10 @@ private:
      * @brief Run md5 step for 64 bytes sized buffer input.
      * 
      * @param wd 64 bytes to apply md5 step.
-     * @param result Step result.
+     * @param digest initial Digest for step.
+     * @return Digest Step result.
      */
-    void md5step(unsigned int *wd, unsigned int *result);
+    Digest md5step(unsigned int *wd, const Digest &digest);
 public:
     /**
      * @brief Construct a new Hash object
@@ -87,11 +109,11 @@ public:
      */
     Hash();
 
-    unsigned int* md5(std::stringstream* stream);
+    Digest md5(std::stringstream* stream);
 
-    unsigned int* md5(const char *msg);
+    Digest md5(const char *msg);
 
-    unsigned int* md5(std::fstream *msg, u_int64_t size);
+    Digest md5(std::fstream *msg, u_int64_t size);
 };
 
 #endif

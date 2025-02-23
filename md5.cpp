@@ -2,16 +2,12 @@
 
 Hash::Hash() {}
 
-unsigned int* Hash::md5(std::stringstream* stream){
+Digest Hash::md5(std::stringstream* stream){
     return md5(stream->str().c_str());
 }
 
-unsigned int* Hash::md5(fstream *msg, u_int64_t size){
-    unsigned int *result = (unsigned int*) malloc(sizeof(unsigned int)*4);
-    result[0] = 0x67452301;   //A
-    result[1] = 0xefcdab89;   //B
-    result[2] = 0x98badcfe;   //C
-    result[3] = 0x10325476;   //D
+Digest Hash::md5(fstream *msg, u_int64_t size){
+    Digest digest(0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476);
     u_int64_t msglen = size;
     u_int64_t bitslen = 8*msglen;
 
@@ -20,34 +16,30 @@ unsigned int* Hash::md5(fstream *msg, u_int64_t size){
     if(msglen > 63){
         for(offset = 0; offset < msglen - 63; offset += 64 ){
             msg->read(buff, 64);
-            md5step((unsigned int *) buff, result);
+            digest += md5step((unsigned int *) buff, digest);
         }
     }
     bffzero(buff, 64);
     msg->read(buff, msglen - offset);
     buff[msglen - offset] = 0b10000000;
     if(msglen - offset > 55){
-        md5step((unsigned int *) buff, result);
+        digest += md5step((unsigned int *) buff, digest);
         bffzero(buff, 56);
     }
     bffcpy(buff + 56, &bitslen, 8);
-    md5step((unsigned int *) buff, result);
+    digest += md5step((unsigned int *) buff, digest);
     free(buff);
-    return result;
+    return digest;
 }
 
-unsigned int* Hash::md5(const char *msg){
-    unsigned int *result = (unsigned int*) malloc(sizeof(unsigned int)*4);
-    result[0] = 0x67452301;   //A
-    result[1] = 0xefcdab89;   //B
-    result[2] = 0x98badcfe;   //C
-    result[3] = 0x10325476;   //D
+Digest Hash::md5(const char *msg){
+    Digest digest(0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476);
     int msglen = strsize(msg);
     u_int64_t bitslen = 8*msglen;
 
     int offset; 
     for(offset = 0; offset < msglen - 63; offset += 64 ){
-        md5step((unsigned int *) (msg + offset), result);
+        digest += md5step((unsigned int *) (msg + offset), digest);
     }
     
     char *lastmsg = (char*) malloc(sizeof(char)*64);
@@ -55,47 +47,41 @@ unsigned int* Hash::md5(const char *msg){
     bffcpy(lastmsg, (void *) (msg + offset), msglen - offset);
     lastmsg[msglen - offset] = 0b10000000;
     if(msglen - offset > 55){
-        md5step((unsigned int *) lastmsg, result);
+        digest += md5step((unsigned int *) lastmsg, digest);
         bffzero(lastmsg, 56);
     }
     bffcpy(lastmsg + 56, &bitslen, 8);
-    md5step((unsigned int *) lastmsg, result);
-    return result;
+    digest += md5step((unsigned int *) lastmsg, digest);
+    return digest;
 }
 
-void Hash::md5step(unsigned int *wd, unsigned int *result){
+Digest Hash::md5step(unsigned int *wd, const Digest &digest){
     unsigned int F, G;
-    unsigned int A = result[0];
-    unsigned int B = result[1];
-    unsigned int C = result[2];
-    unsigned int D = result[3];
+    Digest step = digest;
     for(int i = 0; i<64; i++) {
         if( i < 16 ){
-            F = (B & C) | ((~B) & D);
+            F = (step.B & step.C) | ((~step.B) & step.D);
             G = i;
         }
         else if( i < 32 ){
-            F = (D & B) | ((~D) & C);
+            F = (step.D & step.B) | ((~step.D) & step.C);
             G = (5*i + 1)%16;
         }
         else if( i < 48 ){
-            F = B ^ C ^ D;
+            F = step.B ^ step.C ^ step.D;
             G = (3*i + 5)%16;
         }
         else{
-            F = C ^ (B | (~D));
+            F = step.C ^ (step.B | (~step.D));
             G = (7*i)%16;
         }
-        F += A + sequence[i] + wd[G];
-        A = D;
-        D = C;
-        C = B;
-        B = B + leftrotate(F, shift[i]);
+        F += step.A + sequence[i] + wd[G];
+        step.A = step.D;
+        step.D = step.C;
+        step.C = step.B;
+        step.B = step.B + leftrotate(F, shift[i]);
     }
-    result[0] += A;
-    result[1] += B;
-    result[2] += C;
-    result[3] += D;
+    return step;
 }
 
 size_t Hash::strsize(const char *str){
